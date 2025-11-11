@@ -1,28 +1,33 @@
+use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, DbErr, ActiveModelTrait, Set, NotSet};
+use uuid::Uuid;
+use chrono::Utc;
 
-use crate::{database::DbPool, entities::user::User};
+use crate::{
+    database::DbPool,
+    entities::user::{Entity as UserEntity, Model as UserModel, ActiveModel, Column},
+};
 
-pub async fn find_by_email(pool: &DbPool, email: &str) -> sqlx::Result<Option<User>> {
-  sqlx::query_as::<_, User>(
-      "SELECT id, username, email, password, created_at FROM users WHERE email = ?"
-  )
-  .bind(email)
-  .fetch_optional(pool)
-  .await
+pub async fn find_by_email(db: &DbPool, email: &str) -> Result<Option<UserModel>, DbErr> {
+    UserEntity::find()
+    .filter(Column::Email.eq(email))
+    .one(db)
+    .await
 }
 
-pub async fn insert(
-  pool: &DbPool,
-  user: &User,
-) -> sqlx::Result<()> {
-  sqlx::query(
-      "INSERT INTO users (id, username, email, password, created_at) VALUES (?, ?, ?, ?, ?)"
-  )
-  .bind(user.id)
-  .bind(&user.username)
-  .bind(&user.email)
-  .bind(&user.password)
-  .bind(user.created_at)
-  .execute(pool)
-  .await
-  .map(|_| ())
+pub async fn insert(db: &DbPool, user: UserModel) -> Result<UserModel, DbErr> {
+    let user_id = user.id.clone();
+    let active_model = ActiveModel {
+        id: Set(user.id.clone()),
+        username: Set(user.username.clone()),
+        email: Set(user.email.clone()),
+        password: Set(user.password.clone()),
+        created_at: NotSet,
+    };
+    
+    let _ = active_model.insert(db).await;
+    
+    UserEntity::find_by_id(&user_id)
+        .one(db)
+        .await?
+        .ok_or_else(|| DbErr::RecordNotFound(format!("Failed to find inserted user with id: {}", user_id)))
 }

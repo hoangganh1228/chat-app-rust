@@ -1,13 +1,22 @@
+use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-pub struct Message {
-    pub id: Uuid,
-    pub room_id: Uuid,
-    pub sender_id: Uuid,
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "messages")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: String,
+    
+    pub room_id: String,
+    
+    pub sender_id: String,
+    
     pub content: String,
-    pub created_at: DateTime<Utc>,
+    
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {}
+
+impl ActiveModelBehavior for ActiveModel {}

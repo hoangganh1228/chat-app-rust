@@ -31,22 +31,17 @@ async fn main() -> anyhow::Result<()> {
     
     let jwt_expiration = Duration::from_secs(jwt_expiration_minutes * 60);
 
-    // let listener = TcpListener::bind("127.0.0.1:3000").await?;
     let state = database::init_app_state(jwt_secret, jwt_expiration).await?;
 
-    // Tạo router
     let app = Router::new()
         .merge(routes::build())
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    // Bind và serve
     let addr = format!("localhost:{}", port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     
     println!("🚀 Server is running on http://{}", addr);
-    println!("📝 Register: POST http://{}/auth/register", addr);
-    println!("🔐 Login: POST http://{}/auth/login", addr);
     
     axum::serve(listener, app).await?;
 

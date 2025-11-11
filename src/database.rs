@@ -1,9 +1,9 @@
 use std::sync::Arc;   // Arc = Atomic Reference Counted pointer, share data across threads/tasks safely
 use std::time::Duration; 
 use crate::security::JwtManager;
-use sqlx::{mysql::MySqlPoolOptions, MySql, Pool};
+use sea_orm::{Database, DatabaseConnection};
 
-pub type DbPool = Pool<MySql>;
+pub type DbPool = DatabaseConnection;
 pub type SharedState = Arc<AppState>;
 
 #[derive(Debug, Clone)]
@@ -46,19 +46,12 @@ impl DatabaseConfig {
         max_connections,
     })
   }
-
-  pub async fn connect(&self) -> sqlx::Result<DbPool> {
-      MySqlPoolOptions::new()
-          .max_connections(self.max_connections)
-          .connect(&self.database_url)
-          .await
-  }
 }
 
 pub async fn init_db_pool() -> anyhow::Result<DbPool> {
   let config = DatabaseConfig::from_env()?;
-  let pool = config.connect().await?;
-  Ok(pool)
+  let db = Database::connect(&config.database_url).await?;
+  Ok(db)
 }
 
 pub async fn init_app_state(
