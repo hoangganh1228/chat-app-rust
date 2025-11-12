@@ -115,7 +115,6 @@ pub async fn add_member(
       .jwt
       .validate(token)
       .map_err(|_| ApiError::Unauthorized("Invalid token".into()))?;
-  println!("requester_id: {:?}", requester_id);
   room::add_member(state.as_ref(), room_id, requester_id, payload).await?;
   Ok(ApiResponse::success(()))
 }

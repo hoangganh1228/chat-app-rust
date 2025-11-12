@@ -32,3 +32,7 @@ pub async fn insert(db: &DbPool, user: UserModel) -> Result<UserModel, DbErr> {
         .ok_or_else(|| DbErr::RecordNotFound(format!("Failed to find inserted user with id: {}", user_id)))
 }
 
+pub async fn list_all(db: &DbPool) -> Result<Vec<UserModel>, DbErr> {
+    UserEntity::find().all(db).await
+}
+
