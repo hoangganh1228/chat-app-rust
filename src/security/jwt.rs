@@ -1,4 +1,4 @@
-use jsonwebtoken::{encode, Header, EncodingKey};
+use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
@@ -9,7 +9,7 @@ pub struct JwtManager {
   expiration: Duration,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Claims {
     sub: String,
     exp: usize,
@@ -38,6 +38,15 @@ impl JwtManager {
           &claims,
           &EncodingKey::from_secret(self.secret.as_bytes()),
       )?)
+  }
+
+  pub fn validate(&self, token: &str) -> anyhow::Result<Uuid> {
+    let data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(self.secret.as_bytes()),
+        &Validation::default(),
+    )?;
+    Ok(Uuid::parse_str(&data.claims.sub)?)
   }
 }
 

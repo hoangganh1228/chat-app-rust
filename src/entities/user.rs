@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,  // SeaORM sẽ tự infer là VARCHAR hoặc TEXT
+    pub id: String, 
     
     pub username: String,
     

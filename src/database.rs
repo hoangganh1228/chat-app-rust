@@ -2,6 +2,8 @@ use std::sync::Arc;   // Arc = Atomic Reference Counted pointer, share data acro
 use std::time::Duration; 
 use crate::security::JwtManager;
 use sea_orm::{Database, DatabaseConnection};
+use tokio::sync::broadcast;
+use crate::dtos::chat::WsOutboundMessage;
 
 pub type DbPool = DatabaseConnection;
 pub type SharedState = Arc<AppState>;
@@ -10,6 +12,7 @@ pub type SharedState = Arc<AppState>;
 pub struct AppState {
   pub db: DbPool,
   pub jwt: JwtManager,
+  pub chat_tx: broadcast::Sender<WsOutboundMessage>,
 }
 
 #[derive(Debug, Clone)]
@@ -60,6 +63,8 @@ pub async fn init_app_state(
 ) -> anyhow::Result<SharedState> {
   let db = init_db_pool().await?;
   let jwt = JwtManager::new(jwt_secret, jwt_expiration);
-  let state = Arc::new(AppState { db, jwt });
+  let (chat_tx, _chat_rx) = broadcast::channel(128);
+
+  let state = Arc::new(AppState { db, jwt, chat_tx });
   Ok(state)
 }

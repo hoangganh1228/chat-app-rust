@@ -31,3 +31,4 @@ pub async fn insert(db: &DbPool, user: UserModel) -> Result<UserModel, DbErr> {
         .await?
         .ok_or_else(|| DbErr::RecordNotFound(format!("Failed to find inserted user with id: {}", user_id)))
 }
+
